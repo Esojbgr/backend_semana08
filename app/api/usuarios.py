@@ -10,7 +10,7 @@ from cryptography import fernet
 from os import getenv
 from json import dumps
 from datetime import timedelta, datetime
-
+from app.util import enviar_correo
 
 class RegistroController(Resource):
     def post(self):
@@ -156,10 +156,7 @@ class ResetPasswordController(Resource):
         try:
             dataValidada = ResetPasswordSchema.model_validate(request.get_json())
             # Primero validamos que exista el usuario en la bd
-            print(dataValidada)
             usuarioEncontrado = db.session.query(Usuario).filter(Usuario.correo == dataValidada.correo).first()
-            
-
             if not usuarioEncontrado:
                 return {
                     'message':'Usuario no existe en el sistema'
@@ -184,10 +181,11 @@ class ResetPasswordController(Resource):
             print(dataEncriptada)
 
             cuerpo = f"""
-                <h1>Hola!</h1>
-                <p>Haz solicitado restaurar tu password, para hacerlo haz click en el siguiente enlace: {dataEncriptada.decode()}. </br>
+<h1>Hola! </h1>
+<p>Haz solicitado restaurar tu password, para hacerlo haz click en el siguiente enlace: {dataEncriptada.decode()}. </br>
 Si no has sido tu, haz caso omiso a este correo. </p>
-                """
+"""
+            enviar_correo(usuarioEncontrado.correo,"Resetear password", cuerpo)
 
             return {
                 'message':'Se envio el correo para la restauracion'
